@@ -7,14 +7,14 @@
                 v-model="newMessage"
                 @keydown="sendTypingEvent"
                 @keyup.enter="sendMessage"
-                placeholder="Type a message..."
+                placeholder="What do you need to do?"
                 class="flex-1 px-2 py-1 border rounded-lg"
             />
             <button
                 @click="sendMessage"
                 class="px-4 py-1 ml-2 text-white bg-blue-500 rounded-lg"
             >
-                Send
+                Add
             </button>
         </div>
         <div class="flex flex-col justify-end h-80">
