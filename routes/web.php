@@ -15,31 +15,18 @@ Route::get('/dashboard', function () {
     ]);
 })->name('dashboard');
 
-Route::get('/chat/{friend}', function (User $friend) {
-    return view('chat', [
-        'friend' => $friend
-    ]);
+Route::get('/chat', function () {
+    return view('chat');
 })->name('chat');
 
 Route::get('/messages', function () {
     return ChatMessage::query()
-        ->where(function ($query){
-            $query->where('sender_id', 1)
-                ->where('receiver_id', 1);
-        })
-        ->orWhere(function ($query) {
-            $query->where('sender_id', 1)
-                ->where('receiver_id', 1);
-        })
-       ->with(['sender', 'receiver'])
        ->orderBy('id', 'asc')
        ->get();
 });
 
 Route::post('/messages', function () {
     $message = ChatMessage::create([
-        'sender_id' => 1,
-        'receiver_id' => 1,
         'text' => request()->input('message')
     ]);
 
