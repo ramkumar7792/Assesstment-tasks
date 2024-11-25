@@ -4,30 +4,29 @@
         <div class="flex items-center">
             <input
                 type="text"
-                v-model="newMessage"
-                @keydown="sendTypingEvent"
-                @keyup.enter="sendMessage"
+                v-model="newItem"
+                @keyup.enter="addItem"
                 placeholder="What do you need to do?"
                 class="flex-1 px-2 py-1 border rounded-lg"
             />
             <button
-                @click="sendMessage"
+                @click="addItem"
                 class="px-4 py-1 ml-2 text-white bg-blue-500 rounded-lg"
             >
                 Add
             </button>
         </div>
-        <div class="flex flex-col justify-end h-80">
-            <div ref="messagesContainer" class="p-4 overflow-y-auto max-h-fit">
+        <div class="flex flex-col justify-start h-80">
+            <div ref="itemsContainer" class="p-4 overflow-y-auto max-h-fit">
                 <div
-                    v-for="message in messages"
-                    :key="message.id"
+                    v-for="item in items"
+                    :key="item.id"
                     class=" items-center mb-2"
                 >
 
-                    <div class="p-2 mr-auto bg-gray-200 ">
-                        <input type="radio"  class="p-2 mr-2" @click="deleteMessage" :value="message.id">
-                        {{ message.text }}
+                    <div class="p-2 mr-auto bg-gray-200 rounded-lg">
+                        <input type="radio"  class="p-2 mr-2" @click="deleteItem" :value="item.id">
+                        {{ item.text }}
                     </div>
                 </div>
             </div>
@@ -51,18 +50,18 @@ const props = defineProps({
     },
 });
 
-const messages = ref([]);
-const newMessage = ref("");
-const messagesContainer = ref(null);
+const items = ref([]);
+const newItem = ref("");
+const itemsContainer = ref(null);
 const isFriendTyping = ref(false);
 const isFriendTypingTimer = ref(null);
 
 watch(
-    messages,
+    items,
     () => {
         nextTick(() => {
-            messagesContainer.value.scrollTo({
-                top: messagesContainer.value.scrollHeight,
+            itemsContainer.value.scrollTo({
+                top: itemsContainer.value.scrollHeight,
                 behavior: "smooth",
             });
         });
@@ -70,47 +69,40 @@ watch(
     { deep: true }
 );
 
-const sendMessage = () => {
-    if (newMessage.value.trim() !== "") {
+const addItem = () => {
+    if (newItem.value.trim() !== "") {
         axios
-            .post(`/messages/${props.friend.id}`, {
-                message: newMessage.value,
+            .post(`/items/${props.friend.id}`, {
+                item: newItem.value,
             })
             .then((response) => {
-                messages.value.push(response.data);
-                newMessage.value = "";
+                items.value.push(response.data);
+                newItem.value = "";
             });
     }
 };
 
-const sendTypingEvent = () => {
-    Echo.private(`chat.${props.friend.id}`).whisper("typing", {
-        userID: props.currentUser.id,
-    });
-};
 
-const deleteMessage = (e) => {
-    // e.props('style=”text-decoration:line-through;”');
+const deleteItem = (e) => {
     e.target.parentNode.style.textDecoration = "line-through";
     axios
-            .post(`/messages/${props.friend.id}/`+e.target.value, {
-                message: e.target.value,
+            .post(`/items/${props.friend.id}/`+e.target.value, {
+                item: e.target.value,
             })
             .then((response) => {
-                messages.value.push(response.data);
-                newMessage.value = "";
+                newItem.value = "";
             });
 }
 
 onMounted(() => {
-    axios.get(`/messages/${props.friend.id}`).then((response) => {
+    axios.get(`/items/${props.friend.id}`).then((response) => {
         console.log(response.data);
-        messages.value = response.data;
+        items.value = response.data;
     });
 
     Echo.private(`chat.${props.currentUser.id}`)
-        .listen("MessageSent", (response) => {
-            messages.value.push(response.message);
+        .listen("ItemSent", (response) => {
+            items.value.push(response.item);
         })
         .listenForWhisper("typing", (response) => {
             isFriendTyping.value = response.userID === props.friend.id;

@@ -3,25 +3,21 @@
 use App\Events\MessageSent;
 use App\Models\ChatMessage;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+
 Route::get('/dashboard', function () {
-    return view('dashboard', [
-        'users' => User::whereNot('id', auth()->id())->get()
+    return view('chat', [
+        'friend' => Auth::user()
     ]);
 })->middleware(['auth'])->name('dashboard');
 
-Route::get('/chat/{friend}', function (User $friend) {
-    return view('chat', [
-        'friend' => $friend
-    ]);
-})->middleware(['auth'])->name('chat');
-
-Route::get('/messages/{friend}', function (User $friend) {
+Route::get('/items/{friend}', function (User $friend) {
     return ChatMessage::query()
         ->where(function ($query) use ($friend) {
             $query->where('sender_id', auth()->id())
@@ -36,21 +32,21 @@ Route::get('/messages/{friend}', function (User $friend) {
        ->get();
 })->middleware(['auth']);
 
-Route::post('/messages/{friend}', function (User $friend) {
-    $message = ChatMessage::create([
+Route::post('/items/{friend}', function (User $friend) {
+    $item = ChatMessage::create([
         'sender_id' => auth()->id(),
         'receiver_id' => $friend->id,
-        'text' => request()->input('message')
+        'text' => request()->input('item')
     ]);
 
-    broadcast(new MessageSent($message));
-    return  $message;
+    broadcast(new MessageSent($item));
+    return  $item;
 });
 
-Route::post('/messages/{friend}/{id}', function (User $friend, $id) {
-    $message = ChatMessage::find($id)->delete();
-    broadcast(new MessageSent($message));
-    return  $message;
+Route::post('/items/{friend}/{id}', function (User $friend, $id) {
+    $item = ChatMessage::find($id)->delete();
+    broadcast(new MessageSent($item));
+    return  $item;
 });
 
 require __DIR__ . '/auth.php';
