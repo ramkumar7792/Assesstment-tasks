@@ -3,50 +3,54 @@
 use App\Events\MessageSent;
 use App\Models\ChatMessage;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/chat/1/');
 });
 
-
 Route::get('/dashboard', function () {
-    return view('chat', [
-        'friend' => Auth::user()
+    return view('dashboard', [
+        'users' => User::whereNot('id', 1)->get()
     ]);
-})->middleware(['auth'])->name('dashboard');
+})->name('dashboard');
 
-Route::get('/items/{friend}', function (User $friend) {
+Route::get('/chat/{friend}', function (User $friend) {
+    return view('chat', [
+        'friend' => $friend
+    ]);
+})->name('chat');
+
+Route::get('/messages', function () {
     return ChatMessage::query()
-        ->where(function ($query) use ($friend) {
-            $query->where('sender_id', auth()->id())
-                ->where('receiver_id', $friend->id);
+        ->where(function ($query){
+            $query->where('sender_id', 1)
+                ->where('receiver_id', 1);
         })
-        ->orWhere(function ($query) use ($friend) {
-            $query->where('sender_id', $friend->id)
-                ->where('receiver_id', auth()->id());
+        ->orWhere(function ($query) {
+            $query->where('sender_id', 1)
+                ->where('receiver_id', 1);
         })
        ->with(['sender', 'receiver'])
        ->orderBy('id', 'asc')
        ->get();
-})->middleware(['auth']);
-
-Route::post('/items/{friend}', function (User $friend) {
-    $item = ChatMessage::create([
-        'sender_id' => auth()->id(),
-        'receiver_id' => $friend->id,
-        'text' => request()->input('item')
-    ]);
-
-    broadcast(new MessageSent($item));
-    return  $item;
 });
 
-Route::post('/items/{friend}/{id}', function (User $friend, $id) {
-    $item = ChatMessage::find($id)->delete();
-    broadcast(new MessageSent($item));
-    return  $item;
+Route::post('/messages', function () {
+    $message = ChatMessage::create([
+        'sender_id' => 1,
+        'receiver_id' => 1,
+        'text' => request()->input('message')
+    ]);
+
+    broadcast(new MessageSent($message));
+    return  $message;
+});
+
+Route::post('/messages/{id}', function ($id) {
+    $message = ChatMessage::find($id)->delete();
+    broadcast(new MessageSent($message));
+    return  $message;
 });
 
 require __DIR__ . '/auth.php';
