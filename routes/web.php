@@ -9,11 +9,6 @@ Route::get('/', function () {
     return redirect('/chat');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard', [
-        'users' => User::whereNot('id', 1)->get()
-    ]);
-})->name('dashboard');
 
 Route::get('/chat', function () {
     return view('chat');
