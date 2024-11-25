@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect('/chat/1/');
+    return redirect('/chat');
 });
 
 Route::get('/dashboard', function () {
